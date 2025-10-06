@@ -1,0 +1,272 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <title>Демо: отслеживание отвлечения пользователя</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root { --ok:#1b8a5a; --warn:#b88900; --bad:#b6453b; --muted:#666; }
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 0; background: #f6f7f9; color: #111; }
+    header { padding: 16px 20px; background: #fff; border-bottom: 1px solid #e3e6eb; position: sticky; top: 0; z-index: 10; }
+    h1 { margin: 0 0 6px; font-size: 20px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; padding: 16px; }
+    .card { background:#fff; border:1px solid #e3e6eb; border-radius:12px; padding:14px; }
+    .card h2 { font-size:15px; margin:0 0 10px; color:#222; }
+    .state { display:flex; align-items:center; gap:8px; margin:6px 0; }
+    .dot { width:10px; height:10px; border-radius:50%; background:var(--muted); }
+    .dot.ok { background:var(--ok); }
+    .dot.bad { background:var(--bad); }
+    .dot.warn { background:var(--warn); }
+    #log { list-style:none; margin:0; padding:0; max-height: 40vh; overflow:auto; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+    #log li { padding:6px 8px; border-bottom:1px dashed #e3e6eb; font-size: 13px; }
+    #controls { display:flex; gap:8px; flex-wrap: wrap; }
+    button { border:1px solid #e3e6eb; background:#fff; padding:8px 10px; border-radius:8px; cursor:pointer; }
+    button:hover { background:#f2f4f7; }
+    .kvs { display:grid; grid-template-columns: 130px 1fr; gap:6px 10px; font-size:13px; }
+    code { background:#f0f2f5; padding:1px 4px; border-radius:4px; }
+    footer { padding: 12px 16px; color:#555; font-size:12px; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Демо: как понять, что пользователь отвлёкся</h1>
+    <div id="controls">
+      <button id="clearLog">Очистить лог</button>
+      <button id="simulateWork">Смоделировать «работу» (5 c)</button>
+      <button id="toggleHasFocusPoll">Остановить опрос hasFocus()</button>
+      <button id="toggleIdleDetector">Запустить IdleDetector</button>
+    </div>
+  </header>
+
+  <div class="grid">
+    <div class="card">
+      <h2>Сводка состояний</h2>
+      <div class="kvs">
+        <div>Видимость:</div> <div class="state"><span id="visDot" class="dot"></span><span id="visText">—</span></div>
+        <div>Фокус окна:</div> <div class="state"><span id="focusDot" class="dot"></span><span id="focusText">—</span></div>
+        <div>document.hasFocus():</div> <div class="state"><span id="hasFocusDot" class="dot"></span><span id="hasFocusText">—</span></div>
+        <div>Курсор на странице:</div> <div class="state"><span id="pointerDot" class="dot"></span><span id="pointerText">—</span></div>
+        <div>Idle (таймер):</div> <div class="state"><span id="idleDot" class="dot"></span><span id="idleText">—</span></div>
+        <div>Idle Detection API:</div> <div class="state"><span id="idleApiDot" class="dot"></span><span id="idleApiText">нет поддержки</span></div>
+        <div>Страница:</div> <div class="state"><span id="pageDot" class="dot"></span><span id="pageText">—</span></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Лог событий</h2>
+      <ul id="log"></ul>
+    </div>
+
+    <div class="card">
+      <h2>Поддержка/заметки</h2>
+      <ul style="margin:0; padding-left:16px;">
+        <li><code>visibilitychange</code> покрывает скрытие вкладки, сворачивание и блокировку экрана.</li>
+        <li><code>window blur/focus</code> срабатывают при переходе фокуса на другое окно/вкладку/приложение.</li>
+        <li>Порог простоя в демо: <code>20 сек</code> (измените <code>IDLE_AFTER_MS</code>).</li>
+        <li><code>IdleDetector</code> требует HTTPS и разрешение, поддержка — в Chromium-браузерах.</li>
+        <li><code>pagehide/pageshow</code> помогают отличать уход/возврат, включая bfcache.</li>
+      </ul>
+    </div>
+  </div>
+
+  <footer>
+    Ограничения: браузер не даёт детектировать перекрытие окна другими окнами, положение вкладки в стэке и пр. Используйте комбинацию сигналов + здравый таймаут.
+  </footer>
+
+  <script>
+    // ===== Настройки =====
+    const IDLE_AFTER_MS = 20_000; // через сколько мс бездействия считаем пользователя "idle"
+    const HASFOCUS_POLL_MS = 1000; // период опроса document.hasFocus()
+
+    // ===== Утилиты =====
+    const $ = s => document.querySelector(s);
+    const logBox = $('#log');
+    function log(msg) {
+      const time = new Date().toLocaleTimeString();
+      const li = document.createElement('li');
+      li.textContent = `[${time}] ${msg}`;
+      logBox.prepend(li);
+      // ограничим лог до 300 записей
+      const max = 300;
+      while (logBox.children.length > max) logBox.removeChild(logBox.lastChild);
+    }
+    function setState(idText, idDot, text, level='muted') {
+      $(idText).textContent = text;
+      const dot = $(idDot);
+      dot.className = 'dot ' + (level==='ok' ? 'ok' : level==='bad' ? 'bad' : level==='warn' ? 'warn' : '');
+    }
+
+    // ===== Видимость вкладки =====
+    function updateVisibility() {
+      const st = document.visibilityState; // 'visible' | 'hidden' | 'prerender'
+      setState('#visText', '#visDot', st, st === 'visible' ? 'ok' : 'bad');
+    }
+    document.addEventListener('visibilitychange', () => {
+      updateVisibility();
+      log(`visibilitychange → ${document.visibilityState}`);
+    });
+    updateVisibility();
+
+    // ===== Фокус окна =====
+    function onFocus() {
+      setState('#focusText', '#focusDot', 'в фокусе', 'ok');
+      log('window focus');
+    }
+    function onBlur() {
+      setState('#focusText', '#focusDot', 'НЕ в фокусе', 'bad');
+      log('window blur');
+    }
+    window.addEventListener('focus', onFocus);
+    window.addEventListener('blur', onBlur);
+    // инициализация
+    if (document.hasFocus()) onFocus(); else onBlur();
+
+    // ===== document.hasFocus() (периодический опрос) =====
+    let hasFocusPrev = null;
+    let hasFocusTimer = null;
+    function startHasFocusPoll() {
+      if (hasFocusTimer) return;
+      hasFocusTimer = setInterval(() => {
+        const cur = document.hasFocus();
+        if (cur !== hasFocusPrev) {
+          hasFocusPrev = cur;
+          setState('#hasFocusText', '#hasFocusDot', cur ? 'true' : 'false', cur ? 'ok' : 'bad');
+          log(`hasFocus() → ${cur}`);
+        }
+      }, HASFOCUS_POLL_MS);
+      $('#toggleHasFocusPoll').textContent = 'Остановить опрос hasFocus()';
+    }
+    function stopHasFocusPoll() {
+      clearInterval(hasFocusTimer);
+      hasFocusTimer = null;
+      $('#toggleHasFocusPoll').textContent = 'Запустить опрос hasFocus()';
+    }
+    startHasFocusPoll();
+    $('#toggleHasFocusPoll').addEventListener('click', () => {
+      hasFocusTimer ? stopHasFocusPoll() : startHasFocusPoll();
+    });
+
+    // ===== Курсор покинул страницу =====
+    // вариант 1: pointerleave на корневом элементе
+    document.documentElement.addEventListener('pointerleave', (e) => {
+      if (e.relatedTarget == null) {
+        setState('#pointerText', '#pointerDot', 'курсор ВНЕ страницы', 'warn');
+        log('pointerleave (documentElement) → курсор ВНЕ страницы');
+      }
+    });
+    document.documentElement.addEventListener('pointerenter', () => {
+      setState('#pointerText', '#pointerDot', 'курсор НА странице', 'ok');
+      log('pointerenter (documentElement) → курсор НА странице');
+    });
+
+    // вариант 2: mouseout с проверкой "улетания" вверх (к вкладкам/адресной строке)
+    document.addEventListener('mouseout', (e) => {
+      if (!e.relatedTarget && e.clientY <= 0) {
+        setState('#pointerText', '#pointerDot', 'курсор ушёл вверх (вкладка/адресная строка)', 'warn');
+        log('mouseout → курсор ушёл вверх за пределы окна');
+      }
+    });
+
+    // ===== Навигация/жизненный цикл страницы =====
+    window.addEventListener('pageshow', (e) => {
+      setState('#pageText', '#pageDot', e.persisted ? 'pageshow (bfcache)' : 'pageshow', 'ok');
+      log(`pageshow (persisted=${e.persisted})`);
+    });
+    window.addEventListener('pagehide', (e) => {
+      setState('#pageText', '#pageDot', e.persisted ? 'pagehide (в bfcache)' : 'pagehide', 'warn');
+      log(`pagehide (persisted=${e.persisted})`);
+    });
+    window.addEventListener('beforeunload', () => {
+      log('beforeunload → пользователь покидает страницу/перезагрузка/закрытие');
+    });
+
+    // Экспериментальные freeze/resume (если поддерживаются)
+    ['freeze', 'resume'].forEach(evt => {
+      document.addEventListener(evt, () => {
+        setState('#pageText', '#pageDot', evt, evt === 'freeze' ? 'warn' : 'ok');
+        log(`Page Lifecycle: ${evt}`);
+      });
+    });
+
+    // ===== Неактивность через таймер простоя =====
+    let lastActive = Date.now();
+    const activityEvents = ['mousemove','keydown','wheel','touchstart','pointerdown','scroll','visibilitychange','focus'];
+    const onActivity = (src='activity') => {
+      lastActive = Date.now();
+      setState('#idleText', '#idleDot', 'активен', 'ok');
+      if (src) log(`activity: ${src}`);
+    };
+    activityEvents.forEach(evt => {
+      window.addEventListener(evt, () => onActivity(evt), { passive: true });
+    });
+
+    setInterval(() => {
+      const idleMs = Date.now() - lastActive;
+      if (idleMs >= IDLE_AFTER_MS) {
+        setState('#idleText', '#idleDot', `idle ≥ ${Math.round(idleMs/1000)} c`, 'bad');
+      }
+    }, 1000);
+
+    // Кнопка имитации активности
+    $('#simulateWork').addEventListener('click', () => {
+      log('симуляция активности 5 секунд…');
+      const end = Date.now() + 5000;
+      const fake = () => {
+        if (Date.now() < end) {
+          onActivity('simulate');
+          requestAnimationFrame(fake);
+        }
+      };
+      fake();
+    });
+
+    // ===== Idle Detection API (если есть) =====
+    let idleDetectorRunning = false;
+    async function toggleIdleDetector() {
+      if (!('IdleDetector' in window)) {
+        setState('#idleApiText', '#idleApiDot', 'не поддерживается', 'bad');
+        log('IdleDetector не поддерживается этим браузером');
+        return;
+      }
+      if (idleDetectorRunning) {
+        idleDetectorRunning = false;
+        $('#toggleIdleDetector').textContent = 'Запустить IdleDetector';
+        setState('#idleApiText', '#idleApiDot', 'остановлен', 'warn');
+        log('IdleDetector остановлен');
+        if (window.__idleDetector) {
+          try { await window.__idleDetector.stop?.(); } catch {}
+        }
+        return;
+      }
+      try {
+        const status = await navigator.permissions.query({ name: 'idle-detection' });
+        if (status.state === 'denied') {
+          setState('#idleApiText', '#idleApiDot', 'разрешение отклонено', 'bad');
+          log('Разрешение idle-detection отклонено');
+          return;
+        }
+        const detector = new IdleDetector();
+        window.__idleDetector = detector;
+        detector.addEventListener('change', () => {
+          const { userState, screenState } = detector;
+          setState('#idleApiText', '#idleApiDot', `user=${userState}, screen=${screenState}`,
+                   (userState === 'active' && screenState === 'unlocked') ? 'ok' : 'warn');
+          log(`IdleDetector → user=${userState}, screen=${screenState}`);
+        });
+        await detector.start({ threshold: 60_000 }); // пользователь idle, если нет действий 60c (системный уровень)
+        idleDetectorRunning = true;
+        $('#toggleIdleDetector').textContent = 'Остановить IdleDetector';
+        log('IdleDetector запущен (threshold=60c)');
+      } catch (err) {
+        setState('#idleApiText', '#idleApiDot', 'ошибка запуска', 'bad');
+        log('IdleDetector ошибка: ' + (err && err.message || err));
+      }
+    }
+    $('#toggleIdleDetector').addEventListener('click', toggleIdleDetector);
+
+    // ===== Прочие мелочи =====
+    $('#clearLog').addEventListener('click', () => { logBox.innerHTML = ''; });
+  </script>
+</body>
+</html>
+
