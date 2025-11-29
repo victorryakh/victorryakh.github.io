@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AIESEC Изнутри</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+```
+    body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: #fff;
+        overflow-x: hidden;
+    }
+
+    .hero {
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        padding: 2rem;
+        position: relative;
+    }
+
+    .hero h1 {
+        font-size: 3.5rem;
+        margin-bottom: 1rem;
+        animation: fadeInDown 1s ease;
+    }
+
+    .hero p {
+        font-size: 1.5rem;
+        opacity: 0.9;
+        max-width: 800px;
+        animation: fadeInUp 1s ease 0.3s both;
+    }
+
+    .scroll-indicator {
+        position: absolute;
+        bottom: 2rem;
+        animation: bounce 2s infinite;
+    }
+
+    @keyframes fadeInDown {
+        from {
+            opacity: 0;
+            transform: translateY(-30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @keyframes bounce {
+        0%, 20%, 50%, 80%, 100% {
+            transform: translateY(0);
+        }
+        40% {
+            transform: translateY(-10px);
+        }
+        60% {
+            transform: translateY(-5px);
+        }
+    }
+
+    .section {
+        min-height: 100vh;
+        padding: 4rem 2rem;
+        background: #fff;
+        color: #333;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .section:nth-child(even) {
+        background: #f8f9fa;
+    }
+
+    .container {
+        max-width: 1200px;
+        width: 100%;
+    }
+
+    h2 {
+        font-size: 2.5rem;
+        margin-bottom: 2rem;
+        text-align: center;
+        color: #667eea;
+    }
+
+    .journey-container {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 2rem;
+        margin-top: 3rem;
+    }
+
+    .journey-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        padding: 2rem;
+        border-radius: 20px;
+        color: #fff;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        cursor: pointer;
+    }
+
+    .journey-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+    }
+
+    .journey-card h3 {
+        font-size: 1.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .journey-card p {
+        line-height: 1.6;
+        opacity: 0.95;
+    }
+
+    .values-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 2rem;
+        margin-top: 3rem;
+    }
+
+    .value-card {
+        background: #fff;
+        padding: 2rem;
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        transition: all 0.3s ease;
+        border-left: 5px solid #667eea;
+    }
+
+    .value-card:hover {
+        transform: scale(1.05);
+        box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+    }
+
+    .value-card h3 {
+        color: #667eea;
+        margin-bottom: 1rem;
+        font-size: 1.3rem;
+    }
+
+    .value-card ul {
+        list-style: none;
+        padding-left: 0;
+    }
+
+    .value-card li {
+        padding: 0.5rem 0;
+        padding-left: 1.5rem;
+        position: relative;
+    }
+
+    .value-card li:before {
+        content: "✓";
+        position: absolute;
+        left: 0;
+        color: #667eea;
+        font-weight: bold;
+    }
+
+    .process-flow {
+        display: flex;
+        flex-direction: column;
+        gap: 2rem;
+        margin-top: 3rem;
+    }
+
+    .process-step {
+        display: flex;
+        align-items: center;
+        gap: 2rem;
+        background: #fff;
+        padding: 2rem;
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        transition: all 0.3s ease;
+    }
+
+    .process-step:hover {
+        transform: translateX(10px);
+        box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+    }
+
+    .step-number {
+        font-size: 3rem;
+        font-weight: bold;
+        color: #667eea;
+        min-width: 80px;
+    }
+
+    .step-content h3 {
+        color: #667eea;
+        margin-bottom: 0.5rem;
+    }
+
+    .step-content p {
+        line-height: 1.6;
+        color: #666;
+    }
+
+    .interactive-demo {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        padding: 3rem;
+        border-radius: 20px;
+        margin-top: 3rem;
+        color: #fff;
+    }
+
+    .demo-buttons {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+        justify-content: center;
+        margin: 2rem 0;
+    }
+
+    .demo-btn {
+        padding: 1rem 2rem;
+        background: rgba(255,255,255,0.2);
+        border: 2px solid #fff;
+        border-radius: 50px;
+        color: #fff;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        backdrop-filter: blur(10px);
+    }
+
+    .demo-btn:hover, .demo-btn.active {
+        background: #fff;
+        color: #667eea;
+        transform: scale(1.05);
+    }
+
+    .demo-content {
+        background: rgba(255,255,255,0.1);
+        padding: 2rem;
+        border-radius: 15px;
+        backdrop-filter: blur(10px);
+        min-height: 200px;
+        display: none;
+    }
+
+    .demo-content.active {
+        display: block;
+        animation: fadeIn 0.5s ease;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+
+    .lead-framework {
+        margin-top: 3rem;
+        text-align: center;
+    }
+
+    .framework-pillars {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 2rem;
+        margin-top: 2rem;
+    }
+
+    .pillar {
+        background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+        padding: 2rem;
+        border-radius: 15px;
+        color: #fff;
+        transition: all 0.3s ease;
+    }
+
+    .pillar:hover {
+        transform: rotate(-2deg) scale(1.05);
+    }
+
+    .pillar h4 {
+        font-size: 1.3rem;
+        margin-bottom: 1rem;
+    }
+
+    .cta-section {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        text-align: center;
+        color: #fff;
+    }
+
+    .cta-btn {
+        display: inline-block;
+        padding: 1.5rem 3rem;
+        background: #fff;
+        color: #667eea;
+        text-decoration: none;
+        border-radius: 50px;
+        font-size: 1.2rem;
+        font-weight: bold;
+        margin-top: 2rem;
+        transition: all 0.3s ease;
+    }
+
+    .cta-btn:hover {
+        transform: scale(1.1);
+        box-shadow: 0 10px 30px rgba(255,255,255,0.3);
+    }
+
+    @media (max-width: 768px) {
+        .hero h1 {
+            font-size: 2rem;
+        }
+        
+        .hero p {
+            font-size: 1.2rem;
+        }
+
+        h2 {
+            font-size: 2rem;
+        }
+
+        .process-step {
+            flex-direction: column;
+            text-align: center;
+        }
+
+        .step-number {
+            min-width: auto;
+        }
+    }
+</style>
+```
+
+</head>
+<body>
+    <div class="hero">
+        <h1>🌟 AIESEC Изнутри</h1>
+        <p>Как мы на самом деле развиваем лидерство и раскрываем потенциал? Не абстрактные слова, а конкретные методы и процессы</p>
+        <div class="scroll-indicator">
+            <svg width="30" height="30" viewBox="0 0 24 24" fill="white">
+                <path d="M7 10l5 5 5-5z"/>
+            </svg>
+        </div>
+    </div>
+
+```
+<div class="section">
+    <div class="container">
+        <h2>🎯 В Чём Наша Уникальность?</h2>
+        <p style="text-align: center; font-size: 1.2rem; color: #666; max-width: 800px; margin: 0 auto;">
+            В AIESEC мы не просто говорим о развитии лидерства — у нас есть чёткая система LDM (Leadership Development Model), которая превращает опыт в реальные изменения личности.
+        </p>
+
+        <div class="journey-container">
+            <div class="journey-card">
+                <h3>🧭 Внешнее путешествие</h3>
+                <p>Реальные задачи, работа в команде, взаимодействие с разными культурами. Ты не просто наблюдаешь — ты делаешь, ошибаешься, учишься.</p>
+            </div>
+            <div class="journey-card">
+                <h3>💭 Внутреннее путешествие</h3>
+                <p>Осознанная рефлексия через метод LEAD. Мы помогаем понять, как опыт меняет тебя, твои ценности и мировоззрение.</p>
+            </div>
+            <div class="journey-card">
+                <h3>🔄 Система поддержки</h3>
+                <p>Менторы, коучи, структурированная обратная связь. Ты не один на один с вызовами — есть система, которая направляет.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="section">
+    <div class="container">
+        <h2>🚀 Четыре Фазы Твоего Развития</h2>
+        <div class="process-flow">
+            <div class="process-step">
+                <div class="step-number">01</div>
+                <div class="step-content">
+                    <h3>Постановка личных целей</h3>
+                    <p>Понимаешь, где ты сейчас и что хочешь получить от опыта. Не абстрактное "хочу развиваться", а конкретные цели на каждую ценность AIESEC.</p>
+                </div>
+            </div>
+            <div class="process-step">
+                <div class="step-number">02</div>
+                <div class="step-content">
+                    <h3>Рефлексия опыта</h3>
+                    <p>Регулярные упражнения для анализа: как ты меняешься? Что нового узнал о себе? Как достигаешь целей? Это не случайные мысли, а структурированный процесс.</p>
+                </div>
+            </div>
+            <div class="process-step">
+                <div class="step-number">03</div>
+                <div class="step-content">
+                    <h3>Понимание своих ценностей</h3>
+                    <p>Через опыт и рефлексию осознаёшь, что для тебя действительно важно. Не то, что говорят другие, а твои настоящие ценности.</p>
+                </div>
+            </div>
+            <div class="process-step">
+                <div class="step-number">04</div>
+                <div class="step-content">
+                    <h3>Переосмысление себя</h3>
+                    <p>Понимаешь, как использовать полученный опыт в будущем. Кем ты стал? Как это изменит твою жизнь дальше?</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="section">
+    <div class="container">
+        <h2>💎 Шесть Ценностей AIESEC</h2>
+        <p style="text-align: center; font-size: 1.1rem; color: #666; max-width: 900px; margin: 0 auto 2rem;">
+            Это не просто красивые слова. Для каждой ценности у нас есть конкретные навыки, которые мы развиваем через специальные LEAD-сессии.
+        </p>
+
+        <div class="values-grid">
+            <div class="value-card">
+                <h3>🔥 Активация Лидерства</h3>
+                <ul>
+                    <li>Практика эмпатии</li>
+                    <li>Коучинг других</li>
+                    <li>Вдохновляющие истории</li>
+                    <li>Развитие команды</li>
+                </ul>
+            </div>
+
+            <div class="value-card">
+                <h3>🌱 Устойчивые Действия</h3>
+                <ul>
+                    <li>Долгосрочное планирование</li>
+                    <li>Аналитическое мышление</li>
+                    <li>Управление рисками</li>
+                    <li>Приоритизация ресурсов</li>
+                </ul>
+            </div>
+
+            <div class="value-card">
+                <h3>⭐ Стремление к Совершенству</h3>
+                <ul>
+                    <li>Работа с обратной связью</li>
+                    <li>Понимание сильных сторон</li>
+                    <li>Непрерывное обучение</li>
+                    <li>Личный план развития</li>
+                </ul>
+            </div>
+
+            <div class="value-card">
+                <h3>✨ Демонстрация Честности</h3>
+                <ul>
+                    <li>Понимание личных ценностей</li>
+                    <li>Этичное принятие решений</li>
+                    <li>Аутентичность</li>
+                    <li>Самоосознанность</li>
+                </ul>
+            </div>
+
+            <div class="value-card">
+                <h3>🎉 Радость Участия</h3>
+                <ul>
+                    <li>Демонстрация энтузиазма</li>
+                    <li>Связь со своей страстью</li>
+                    <li>Принятие себя</li>
+                    <li>Создание комьюнити</li>
+                </ul>
+            </div>
+
+            <div class="value-card">
+                <h3>🌍 Жизнь в Разнообразии</h3>
+                <ul>
+                    <li>Создание инклюзивных пространств</li>
+                    <li>Работа с разными культурами</li>
+                    <li>Использование различий как силы</li>
+                    <li>Активное слушание</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="section">
+    <div class="container">
+        <h2>🎓 Метод LEAD: Как Это Работает</h2>
+        <p style="text-align: center; font-size: 1.1rem; color: #666; max-width: 900px; margin: 0 auto;">
+            LEAD — это наша система доставки развития. Каждая сессия специально разработана под конкретную ценность, этап твоего пути и аудиторию.
+        </p>
+
+        <div class="interactive-demo">
+            <h3 style="text-align: center; font-size: 1.8rem; margin-bottom: 1rem;">Три Столпа LEAD</h3>
+            <div class="demo-buttons">
+                <button class="demo-btn active" onclick="showDemo('facilitation')">LEAD Фасилитация</button>
+                <button class="demo-btn" onclick="showDemo('content')">LEAD Контент</button>
+                <button class="demo-btn" onclick="showDemo('environment')">LEAD Среда</button>
+            </div>
+
+            <div id="facilitation" class="demo-content active">
+                <h4 style="font-size: 1.4rem; margin-bottom: 1rem;">💪 LEAD Фасилитация</h4>
+                <p style="line-height: 1.8;">
+                    <strong>Кто проводит:</strong> Специально обученные члены AIESEC, которые прошли тренинги по навыкам коучинга, эмпатии, публичным выступлениям и управлению аудиторией.
+                </p>
+                <p style="line-height: 1.8; margin-top: 1rem;">
+                    <strong>Что умеют:</strong> Задавать правильные вопросы, создавать безопасное пространство для откровенности, давать обратную связь, работать с эмоциями участников.
+                </p>
+            </div>
+
+            <div id="content" class="demo-content">
+                <h4 style="font-size: 1.4rem; margin-bottom: 1rem;">📚 LEAD Контент</h4>
+                <p style="line-height: 1.8;">
+                    <strong>Принцип создания:</strong> Каждая сессия создаётся под конкретную аудиторию, фазу внутреннего путешествия, и одну из шести ценностей AIESEC.
+                </p>
+                <p style="line-height: 1.8; margin-top: 1rem;">
+                    <strong>Структура:</strong> Сенсинг (оценка текущего состояния) → Сама сессия → Фолоу-ап (закрепление). Нет случайных активностей — всё по чёткому фреймворку.
+                </p>
+            </div>
+
+            <div id="environment" class="demo-content">
+                <h4 style="font-size: 1.4rem; margin-bottom: 1rem;">🌟 LEAD Среда</h4>
+                <p style="line-height: 1.8;">
+                    <strong>Три типа обучения:</strong><br>
+                    • <strong>Я и Я:</strong> Индивидуальная рефлексия, самопознание<br>
+                    • <strong>Я и Ты:</strong> One-to-one коучинг сессии<br>
+                    • <strong>Я и Другие:</strong> Групповые воркшопы и learning circles
+                </p>
+                <p style="line-height: 1.8; margin-top: 1rem;">
+                    Выбор среды зависит от чувствительности темы, уровня участников и целей сессии.
+                </p>
+            </div>
+        </div>
+
+        <div class="lead-framework">
+            <h3 style="color: #667eea; font-size: 1.8rem; margin-bottom: 1rem;">Как Создаётся LEAD Сессия</h3>
+            <div class="framework-pillars">
+                <div class="pillar">
+                    <h4>1️⃣ Знай свою аудиторию</h4>
+                    <p>Понимание, на каком этапе опыта находятся участники. Выбор фазы внутреннего путешествия.</p>
+                </div>
+                <div class="pillar">
+                    <h4>2️⃣ Выбери ценность</h4>
+                    <p>Определение, какую из шести ценностей будем развивать. Выбор конкретного навыка из learning objectives.</p>
+                </div>
+                <div class="pillar">
+                    <h4>3️⃣ Выбери среду</h4>
+                    <p>Решение, будет ли это индивидуальная работа, коучинг или групповой воркшоп.</p>
+                </div>
+                <div class="pillar">
+                    <h4>4️⃣ Создай контент</h4>
+                    <p>Разработка сессии с сенсингом и фолоу-апом. Загрузка в глобальную библиотеку для других.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="section cta-section">
+    <div class="container">
+        <h2 style="color: #fff;">🎯 Теперь Ты Понимаешь, Как Это Работает</h2>
+        <p style="font-size: 1.3rem; max-width: 800px; margin: 0 auto; line-height: 1.8;">
+            AIESEC — это не абстрактные мечты о лидерстве. Это система с чёткими методами, проверенными инструментами и конкретными результатами. Каждый LEAD спейс, который ты посещаешь, специально создан для развития определённого навыка в нужный момент твоего пути.
+        </p>
+        <p style="font-size: 1.2rem; max-width: 800px; margin: 2rem auto 0; opacity: 0.95;">
+            Теперь, когда ты участвуешь в сессиях, ты знаешь: за каждым упражнением стоит глубокая методология, каждый вопрос задан не случайно, и твоё развитие — это результат продуманной системы, а не счастливого совпадения.
+        </p>
+        <a href="#" class="cta-btn">Начать Своё Путешествие 🚀</a>
+    </div>
+</div>
+
+<script>
+    function showDemo(id) {
+        document.querySelectorAll('.demo-content').forEach(el => {
+            el.classList.remove('active');
+        });
+        document.querySelectorAll('.demo-btn').forEach(el => {
+            el.classList.remove('active');
+        });
+        
+        document.getElementById(id).classList.add('active');
+        event.target.classList.add('active');
+    }
+
+    // Smooth scroll
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+            e.preventDefault();
+            const target = document.querySelector(this.getAttribute('href'));
+            if (target) {
+                target.scrollIntoView({
+                    behavior: 'smooth'
+                });
+            }
+        });
+    });
+
+    // Intersection Observer for animations
+    const observerOptions = {
+        threshold: 0.1,
+        rootMargin: '0px 0px -100px 0px'
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.style.opacity = '1';
+                entry.target.style.transform = 'translateY(0)';
+            }
+        });
+    }, observerOptions);
+
+    document.querySelectorAll('.journey-card, .value-card, .process-step, .pillar').forEach(el => {
+        el.style.opacity = '0';
+        el.style.transform = 'translateY(30px)';
+        el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+        observer.observe(el);
+    });
+</script>
+```
+
+</body>
+</html>
